@@ -19,7 +19,7 @@ services:
     environment:
       DB_URL: ${DB_URL}
     ports:
-      - "9000:9000"
+      - "8000:8000"
 
 volumes:
   pgdata:
