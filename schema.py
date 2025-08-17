@@ -6,6 +6,9 @@ from database import SessionLocal
 from datetime import datetime, timezone
 import uuid
 
+from queries.food import FoodQueries
+from mutations.food import FoodMutations
+
 @strawberry.type
 class UserType:
     id: strawberry.ID
@@ -13,7 +16,7 @@ class UserType:
     created: datetime
 
 @strawberry.type
-class Query:
+class Query(FoodQueries):
     @strawberry.field
     def users(self) -> list[UserType]:
         session: Session = SessionLocal()
@@ -22,7 +25,7 @@ class Query:
         return [UserType(id=u.id, username=u.username, created=u.created) for u in users]
     
 @strawberry.type
-class Mutation:
+class Mutation(FoodMutations):
     @strawberry.field
     def create_user(self, username: str, email: str, password: str) -> UserType:
         session: Session = SessionLocal()
