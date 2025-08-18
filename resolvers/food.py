@@ -1,10 +1,22 @@
+import strawberry
 from sqlalchemy.orm import Session
 from database import SessionLocal
 from models import Food, Nutrient, FoodNutrient
 from sb_types.food import FoodNutrientType, FoodType, NutrientType
-from inputs.food import FoodInput, NutrientInput, FoodNutrientInput
+from inputs.food import *
+from serializers.food import food_to_food_type
 import typing
 import uuid
+
+@strawberry.type
+class FoodError:
+     message: str
+
+@strawberry.type
+class DeletedReturn:
+     success: bool
+     message: typing.Optional[str]
+     error: typing.Optional[FoodError]
 
 def get_food_all() -> typing.List[FoodType]:
     session: Session = SessionLocal()
@@ -54,6 +66,29 @@ def create_nutrient(input: "NutrientInput") -> "NutrientType":
         session.close()
         return NutrientType(id=new_nutrient.id, name=new_nutrient.name, unit=new_nutrient.unit, nutrients=new_nutrient.nutrients, created=new_nutrient.created)
 
+def update_nutrient(id: strawberry.ID, input: "NutrientUpdateInput") -> "NutrientType | FoodError":
+     with SessionLocal() as session:
+          nutrient = session.query(Nutrient).filter(Nutrient.id == id).first()
+          if not nutrient:
+               return FoodError(message="not found")
+          
+          nutrient.name = input.name
+          nutrient.unit = input.unit
+
+          session.commit()
+          session.refresh(nutrient)
+          return NutrientType(id=nutrient.id, name=nutrient.name, unit=nutrient.unit.value, created=nutrient.created)
+
+def delete_nutrient(id: strawberry.ID) -> "DeletedReturn":
+    with SessionLocal() as session:
+          nutrient = session.query(Nutrient).filter(Nutrient.id == id).first()
+          if not nutrient:
+               return DeletedReturn(success=False, message="", error=FoodError(message="not found"))
+          
+          session.delete(nutrient)
+          session.commit()
+    return DeletedReturn(success=True, message=f"{id} was deleted", error=None)
+
 def create_food(input: "FoodInput") -> "FoodType":
         session: Session = SessionLocal()
         new_food = Food(
@@ -99,3 +134,37 @@ def create_food(input: "FoodInput") -> "FoodType":
 
         session.close()
         return food_type
+
+def update_food(id: strawberry.ID, input: "FoodUpdateInput") -> "FoodType | FoodError":
+     with SessionLocal() as session:
+          food = session.query(Food).filter(Food.id == id).first()
+          if not food:
+               return FoodError(message="not found")
+          
+          food.name = input.name  
+          food.description = input.description
+          food.recipe = input.recipe
+          food.nutrients.clear()
+          
+          for n in input.nutrients:
+            nutrient = session.query(Nutrient).filter(Nutrient.id == n.nutrient_id).first()
+            if not nutrient:
+                return FoodError(message="not found")
+
+            food.nutrients.append(
+                FoodNutrient(nutrient=nutrient, amount=n.amount)
+            )
+        
+          session.commit()
+          session.refresh(food)
+          return food_to_food_type(food)
+
+def delete_food(id: strawberry.ID) -> "DeletedReturn":
+    with SessionLocal() as session:
+        food = session.query(Food).filter(Food.id == id).first()
+        if not food:
+             return DeletedReturn(success=False, message="", error=FoodError(message="not found"))
+         
+        session.delete(food)
+        session.commit()
+    return DeletedReturn(success=True, message=f"{id} was deleted", error=None)

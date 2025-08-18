@@ -56,7 +56,7 @@ class Food(Base):
     recipe = Column(Text)
     created = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
-    nutrients = relationship("FoodNutrient", back_populates="food")
+    nutrients = relationship("FoodNutrient", back_populates="food", cascade="all, delete-orphan")
 
 class Nutrient(Base):
     __tablename__ = "nutrients"

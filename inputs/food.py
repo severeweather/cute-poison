@@ -19,6 +19,18 @@ class FoodInput:
     nutrients: typing.List[FoodNutrientInput]
 
 @strawberry.input
+class FoodUpdateInput:
+    name: str
+    description: str
+    recipe: str
+    nutrients: typing.List[FoodNutrientInput]
+
+@strawberry.input
 class NutrientInput:
+    name: str
+    unit: UnitEnumGQL
+
+@strawberry.input
+class NutrientUpdateInput:
     name: str
     unit: UnitEnumGQL
