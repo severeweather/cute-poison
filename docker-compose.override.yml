@@ -1,0 +1,8 @@
+services:
+  db:
+    volumes:
+      - pgdata_model_food:/var/lib/postgresql/data
+
+volumes:
+  pgdata_model_food:
+    external: true
