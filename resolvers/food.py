@@ -4,7 +4,7 @@ from database import SessionLocal
 from models import Food, Nutrient, FoodNutrient
 from sb_types.food import FoodNutrientType, FoodType, NutrientType
 from inputs.food import *
-from serializers.food import food_to_food_type
+from serializers.food import food_to_food_type, nutrient_to_nutrient_type
 import typing
 import uuid
 
@@ -17,6 +17,7 @@ class DeletedReturn:
      success: bool
      message: typing.Optional[str]
      error: typing.Optional[FoodError]
+
 
 def get_food_all() -> typing.List[FoodType]:
     session: Session = SessionLocal()
@@ -54,8 +55,9 @@ def get_nutrients_all() -> typing.List[NutrientType]:
     session.close()
     return [NutrientType(id=n.id, name=n.name, unit=n.unit.value, created=n.created) for n in nutrients]
 
+
 def create_nutrient(input: "NutrientInput") -> "NutrientType":
-        session: Session = SessionLocal()
+    with SessionLocal() as session:
         new_nutrient = Nutrient(
             name=input.name,
             unit=input.unit,
@@ -63,8 +65,7 @@ def create_nutrient(input: "NutrientInput") -> "NutrientType":
         session.add(new_nutrient)
         session.commit()
         session.refresh(new_nutrient)
-        session.close()
-        return NutrientType(id=new_nutrient.id, name=new_nutrient.name, unit=new_nutrient.unit, nutrients=new_nutrient.nutrients, created=new_nutrient.created)
+        return nutrient_to_nutrient_type(new_nutrient)
 
 def update_nutrient(id: strawberry.ID, input: "NutrientUpdateInput") -> "NutrientType | FoodError":
      with SessionLocal() as session:
@@ -77,7 +78,7 @@ def update_nutrient(id: strawberry.ID, input: "NutrientUpdateInput") -> "Nutrien
 
           session.commit()
           session.refresh(nutrient)
-          return NutrientType(id=nutrient.id, name=nutrient.name, unit=nutrient.unit.value, created=nutrient.created)
+          return nutrient_to_nutrient_type(nutrient)
 
 def delete_nutrient(id: strawberry.ID) -> "DeletedReturn":
     with SessionLocal() as session:
@@ -89,8 +90,9 @@ def delete_nutrient(id: strawberry.ID) -> "DeletedReturn":
           session.commit()
     return DeletedReturn(success=True, message=f"{id} was deleted", error=None)
 
+
 def create_food(input: "FoodInput") -> "FoodType":
-        session: Session = SessionLocal()
+    with SessionLocal() as session:
         new_food = Food(
             id=uuid.uuid4(),
             type=input.type,
@@ -110,30 +112,7 @@ def create_food(input: "FoodInput") -> "FoodType":
         
         session.commit()
         session.refresh(new_food)
-
-        food_type = FoodType(
-            id=new_food.id,
-            type=new_food.type,
-            name=new_food.name,
-            description=new_food.description,
-            recipe=new_food.recipe,
-            nutrients=[
-                FoodNutrientType(
-                    amount=fn.amount,
-                    nutrient=NutrientType(
-                        id=fn.nutrient.id,
-                        name=fn.nutrient.name,
-                        unit=fn.nutrient.unit,
-                        created=fn.nutrient.created
-                    )
-                )
-                for fn in new_food.nutrients
-            ],
-            created=new_food.created
-        )
-
-        session.close()
-        return food_type
+        return food_to_food_type(new_food)
 
 def update_food(id: strawberry.ID, input: "FoodUpdateInput") -> "FoodType | FoodError":
      with SessionLocal() as session:
