@@ -7,6 +7,7 @@ from inputs.food import *
 from serializers.food import food_to_food_type, nutrient_to_nutrient_type
 import typing
 import uuid
+from security import requires_permission
 
 @strawberry.type
 class FoodError:
@@ -137,8 +138,9 @@ def update_food(id: strawberry.ID, input: "FoodUpdateInput") -> "FoodType | Food
           session.commit()
           session.refresh(food)
           return food_to_food_type(food)
-
-def delete_food(id: strawberry.ID) -> "DeletedReturn":
+     
+@requires_permission("admin")
+def delete_food(id: strawberry.ID, info) -> "DeletedReturn | None":
     with SessionLocal() as session:
         food = session.query(Food).filter(Food.id == id).first()
         if not food:

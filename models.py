@@ -7,6 +7,10 @@ import enum
 
 Base = declarative_base()
 
+class UserRoles(enum.Enum):
+    ADMIN = "admin"
+    USER = "user"
+
 class User(Base):
     __tablename__ = "users"
 
@@ -14,7 +18,16 @@ class User(Base):
     username = Column(String(100))
     email = Column(String(100))
     password = Column(String(128))
+    role = Column(Enum(UserRoles, name="user_roles"), default=UserRoles.USER, nullable=False)
     created = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    def hash_password(self):
+        from security import hash_password
+        self.password = hash_password(self.password)
+
+    def verify_password(self, password: str) -> bool:
+        from security import verify_password
+        return verify_password(password, self.password)
 
 class UnitEnum(enum.Enum):
     GRAM = "g"

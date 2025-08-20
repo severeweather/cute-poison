@@ -6,3 +6,5 @@ uvicorn[standard]==0.23.1
 psycopg2-binary
 alembic
 pyreqs
+python-jose
+passlib
