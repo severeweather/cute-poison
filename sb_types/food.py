@@ -16,6 +16,7 @@ class FoodType:
     recipe: str
     nutrients: typing.List[FoodNutrientType]
     created: datetime
+    created_by: str
 
 @strawberry.type
 class NutrientType:
@@ -23,3 +24,4 @@ class NutrientType:
     name: str
     unit: str
     created: datetime
+    created_by: str

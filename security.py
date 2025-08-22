@@ -28,7 +28,33 @@ def requires_permission(role: str):
 
             if not user.get("role") == role:
                 raise GraphQLError("Unauthorized")
-            print(role, user.get("role"))
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
+def login_required(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        info = kwargs.get("info") or (args[0] if args else None)
+        if not info:
+            raise GraphQLError("Unauthorized")
+        
+        user = info.context.get("user")
+        if not user:
+            raise GraphQLError("Internal Error: User missing")
+        
+        info.context["current_user"] = user
+        return func(*args, **kwargs)
+    return wrapper
+
+
+def ownership_required(subject, object):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if not str(subject["id"]) == str(object.created_by) or str(subject["role"]) == "admin":
+                raise GraphQLError(f"Ownership mismatch {subject['id']} {object.created_by}")
             return func(*args, **kwargs)
         return wrapper
     return decorator

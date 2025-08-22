@@ -13,6 +13,7 @@ def nutrient_to_nutrient_type(nutrient: "Nutrient") -> "NutrientType":
         name=nutrient.name,
         unit=nutrient.unit.value,
         created=nutrient.created,
+        created_by=nutrient.created_by
     )
 
 def food_to_food_type(food: "Food") -> "FoodType":
@@ -26,5 +27,6 @@ def food_to_food_type(food: "Food") -> "FoodType":
             foodnutrient_to_foodnutrient_type(fn)
             for fn in food.nutrients
         ], 
-        created=food.created
+        created=food.created,
+        created_by=food.created_by
     )

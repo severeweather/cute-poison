@@ -9,6 +9,7 @@ Base = declarative_base()
 
 class UserRoles(enum.Enum):
     ADMIN = "admin"
+    SYSTEM = "system"
     USER = "user"
 
 class User(Base):
@@ -68,6 +69,7 @@ class Food(Base):
     description = Column(Text)
     recipe = Column(Text)
     created = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET DEFAULT"), server_default="00000000-0000-0000-0000-000000000000", nullable=False)
 
     nutrients = relationship("FoodNutrient", back_populates="food", cascade="all, delete-orphan")
 
@@ -78,6 +80,7 @@ class Nutrient(Base):
     name = Column(String(50), default="untitled", nullable=False)
     unit = Column(Enum(UnitEnum, name="unit_enum"), default=UnitEnum.GRAM, nullable=False)
     created = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET DEFAULT"), server_default="00000000-0000-0000-0000-000000000000", nullable=False)
 
     food = relationship("FoodNutrient", back_populates="nutrient")
 

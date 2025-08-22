@@ -5,4 +5,5 @@ from resolvers.user import *
 class UserMutations:
     register = strawberry.mutation(resolver=register)
     login = strawberry.mutation(resolver=login)
-    # logout = strawberry.mutation(resolver=logout)
+    delete_user = strawberry.mutation(resolver=delete_user)
+    delete_users = strawberry.mutation(resolver=delete_users)
