@@ -23,6 +23,13 @@ def get_food_all(info) -> typing.List[FoodType]:
     with SessionLocal() as session:
         food = session.query(Food).all()
         return [food_to_food_type(f) for f in food]
+    
+def food_by_id(id: str, info) -> "FoodType | FoodError":
+    with SessionLocal() as session:
+        food = session.query(Food).filter(Food.id == id).first()
+        if not food:
+            return FoodError(message=f"{id} not found")
+        return food_to_food_type(food)
 
 def get_nutrients_all(info) -> typing.List[NutrientType]:
     with SessionLocal() as session:
