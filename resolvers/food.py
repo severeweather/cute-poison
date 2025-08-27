@@ -17,6 +17,11 @@ class DeletedReturn:
      success: bool
      message: typing.Optional[str]
      error: typing.Optional[FoodError]
+
+@strawberry.type
+class AllowedActions:
+    update: bool
+    delete: bool
      
 
 def get_food_all(info) -> typing.List[FoodType]:
@@ -24,7 +29,7 @@ def get_food_all(info) -> typing.List[FoodType]:
         food = session.query(Food).all()
         return [food_to_food_type(f) for f in food]
     
-def food_by_id(id: str, info) -> "FoodType | FoodError":
+def food_by_id(id: strawberry.ID, info) -> "FoodType | FoodError":
     with SessionLocal() as session:
         food = session.query(Food).filter(Food.id == id).first()
         if not food:
@@ -145,3 +150,18 @@ def delete_food(id: strawberry.ID, info) -> "DeletedReturn":
         perform_deletion()
         session.commit() 
         return DeletedReturn(success=True, message=f"{id} was deleted", error=None)
+    
+def allowed_actions(id: strawberry.ID, info) -> "AllowedActions":
+    user = info.context.get("user")
+    if not user:
+        return AllowedActions(update=False, delete=False)
+    
+    with SessionLocal() as session:
+        food = session.query(Food).filter(Food.id == id).first()
+        if not food:
+            return FoodError(message="food not found")
+        
+
+        if not (str(user["id"]) == str(food.created_by) or str(user["role"]) == "admin"):
+            return AllowedActions(update=False, delete=False)
+        return AllowedActions(update=True, delete=True)

@@ -53,7 +53,7 @@ def ownership_required(subject, object):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            if not str(subject["id"]) == str(object.created_by) or str(subject["role"]) == "admin":
+            if not (str(subject["id"]) == str(object.created_by) or str(subject["role"]) == "admin"):
                 raise GraphQLError(f"Ownership mismatch {subject['id']} {object.created_by}")
             return func(*args, **kwargs)
         return wrapper
